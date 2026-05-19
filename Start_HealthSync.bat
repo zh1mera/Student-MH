@@ -4,6 +4,10 @@ echo ========================================================
 echo       HealthSync: Student Mental Health System
 echo ========================================================
 echo.
+echo Installing/Verifying required AI libraries...
+echo (This may take a moment on the first run)
+python -m pip install -r requirements.txt --quiet
+echo.
 echo Starting the Artificial Intelligence modules...
 echo Starting the Flask Web Server...
 echo.
