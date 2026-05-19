@@ -35,7 +35,7 @@ The components work in a unified pipeline triggered by the Counselor Dashboard:
 5.  **Output**: The web interface dynamically displays this result in a color-coded format for the counselor.
 
 ## 4. How to use it? (User Guide)
-1.  **Start the System**: Simply double-click the `Start_HealthSync.bat` file in your project folder. This will automatically start the AI server and open the dashboard in your web browser.
+1.  **Start the System**: Simply double-click the `Start_HealthSync.bat` file in your project folder. The system is designed to be "plug-and-play." When you run the batch file, it will automatically check for and install all necessary Python libraries (like Flask and Scikit-Learn) to the device before starting the AI server and opening the dashboard in your web browser.
 2.  **Enter Data**: Fill out the form with a student's data. 
     *   *Example Scenario A (High Risk)*: Set Attendance to 70%, check "Grades Drop", set Sleep to 4 hours, Financial Stress to 9, and Survey Stress to 85.
     *   *Example Scenario B (Low Risk)*: Set Attendance to 98%, Sleep to 8 hours, and Stress to 20.
