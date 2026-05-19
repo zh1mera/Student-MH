@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student MH Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>Health<span>Sync</span></h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="active">Dashboard</li>
+                <li>Students</li>
+                <li>Reports</li>
+                <li>Settings</li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header>
+                <h1>Counselor Dashboard</h1>
+                <p>Intelligent Student Mental Health System</p>
+            </header>
+
+            <div class="grid-container">
+                <!-- Input Form -->
+                <section class="card input-section">
+                    <h3>Student Data Entry</h3>
+                    <form id="analysis-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="attendance">Attendance (%)</label>
+                                <input type="number" id="attendance" min="0" max="100" value="95" required>
+                            </div>
+                            <div class="form-group checkbox-group">
+                                <label>
+                                    <input type="checkbox" id="grades_drop">
+                                    Significant Grades Drop
+                                </label>
+                            </div>
+                        </div>
+
+                        <h4>Survey Responses (ML Inputs)</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Study Hours/Day</label>
+                                <input type="number" id="study_hours" value="5">
+                            </div>
+                            <div class="form-group">
+                                <label>Sleep Hours/Night</label>
+                                <input type="number" id="sleep_hours" value="7">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Social Media Hours</label>
+                                <input type="number" id="social_media" value="3">
+                            </div>
+                            <div class="form-group">
+                                <label>Financial Stress (1-10)</label>
+                                <input type="number" id="financial_stress" value="5">
+                            </div>
+                        </div>
+
+                        <h4>Self-Reported Emotional State (Fuzzy Inputs)</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Stress Level (0-100)</label>
+                                <input type="number" id="survey_stress" value="30">
+                            </div>
+                            <div class="form-group">
+                                <label>Isolation Level (0-100)</label>
+                                <input type="number" id="survey_isolation" value="20">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Run Analysis</button>
+                    </form>
+                </section>
+
+                <!-- Results Section -->
+                <section class="card results-section">
+                    <h3>Analysis Report</h3>
+                    <div id="results-display" class="hidden">
+                        
+                        <div class="result-badge" id="risk-badge">
+                            <span class="label">Overall Risk Level</span>
+                            <span class="value" id="res-risk">...</span>
+                        </div>
+
+                        <div class="metrics-grid">
+                            <div class="metric">
+                                <h5>Fuzzy Severity Score</h5>
+                                <p id="res-fuzzy">--</p>
+                            </div>
+                            <div class="metric">
+                                <h5>ML Classification</h5>
+                                <p id="res-ml">--</p>
+                            </div>
+                        </div>
+
+                        <div class="recommendation-box">
+                            <h5>System Recommendation</h5>
+                            <p id="res-rec">...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="loading-state" class="hidden">
+                        <div class="spinner"></div>
+                        <p>AI Engine Processing...</p>
+                    </div>
+
+                    <div id="empty-state">
+                        <p>Enter student data and run analysis to view the risk report.</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('analysis-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // UI States
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('results-display').classList.add('hidden');
+            document.getElementById('loading-state').classList.remove('hidden');
+
+            const data = {
+                attendance: document.getElementById('attendance').value,
+                grades_drop: document.getElementById('grades_drop').checked,
+                study_hours: document.getElementById('study_hours').value,
+                sleep_hours: document.getElementById('sleep_hours').value,
+                social_media: document.getElementById('social_media').value,
+                financial_stress: document.getElementById('financial_stress').value,
+                survey_stress: document.getElementById('survey_stress').value,
+                survey_isolation: document.getElementById('survey_isolation').value
+            };
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+
+                // Update UI
+                document.getElementById('res-risk').innerText = result.risk_level;
+                document.getElementById('res-fuzzy').innerText = result.fuzzy_score + ' / 100';
+                document.getElementById('res-ml').innerText = result.ml_prediction;
+                document.getElementById('res-rec').innerText = result.recommendation;
+
+                // Colorize Badge
+                const badge = document.getElementById('risk-badge');
+                badge.className = 'result-badge'; // reset
+                if(result.risk_level === 'Critical' || result.risk_level === 'High') {
+                    badge.classList.add('danger');
+                } else if(result.risk_level === 'Moderate' || result.risk_level === 'Low-Moderate') {
+                    badge.classList.add('warning');
+                } else {
+                    badge.classList.add('safe');
+                }
+
+                // Show Results
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('results-display').classList.remove('hidden');
+
+            } catch (error) {
+                alert("Error running analysis.");
+                console.error(error);
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('empty-state').classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
